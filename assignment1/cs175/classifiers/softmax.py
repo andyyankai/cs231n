@@ -22,7 +22,7 @@ def softmax_loss_naive(W, X, y, reg):
   """
   # Initialize the loss and gradient to zero.
   loss = 0.0
-  dW = np.zeros_like(W)
+  dW = np.zeros_like(W) #yep
 
   #############################################################################
   # TODO: Compute the softmax loss and its gradient using explicit loops.     #
@@ -30,7 +30,25 @@ def softmax_loss_naive(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  num_classes = W.shape[1]
+  num_train = X.shape[0]
+  
+  for i in xrange(num_train):
+    
+    scores = X[i].dot(W)
+    scores -= np.max(scores)
+    sums = np.sum(np.exp(scores))
+
+    loss += -np.log(np.exp(scores[y[i]]) / sums)
+    
+    for k in xrange(num_classes):
+      rua = np.exp(scores[k]) / sums
+      dW[:, k] += (rua - (y[i] == k)) * X[i]
+
+
+  loss /= num_train 
+  loss +=  0.5 * reg * np.sum(W * W)
+  dW = dW/num_train + reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
@@ -54,7 +72,27 @@ def softmax_loss_vectorized(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  num_classes = W.shape[1]
+  num_train = X.shape[0]
+  scores = X.dot(W)
+  scores -= np.max(scores, axis = 1).reshape(-1,1)
+  
+  rua = np.exp(scores) / np.sum(np.exp(scores), axis = 1).reshape(-1,1)
+
+  loss = np.sum(-np.log(rua[np.arange(num_train), y]))
+
+  dS = np.zeros_like(rua)
+  dS[np.arange(num_train), y] = 1
+  dW = X.T.dot(rua - dS)
+
+  loss /= num_train
+  loss += 0.5 * reg * np.sum(W * W)
+  dW /= num_train
+  dW += reg * W
+  
+
+  
+  
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
